@@ -16,6 +16,7 @@
 #define ERROR_MESSAGE "error with audio device"
 #define SAMPLE_RATE 44100
 #define TIMER_ACTUAL_BYTE 1
+#define TIMER_REPAINT 2
 
 #define RECT_START_X 50
 #define RECT_START_Y 120
@@ -66,6 +67,7 @@ VOID CALLBACK TimerProc(
   _In_ DWORD    dwTime
 );
 
+VOID CALLBACK TimerProcRepaint(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime);
 
 INT_PTR CALLBACK DialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -104,6 +106,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
   hwnd_main_window = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_MAINVIEW), NULL, DialogProc);
   ShowWindow(hwnd_main_window, iCmdShow);
   SetTimer(hwnd_main_window, TIMER_ACTUAL_BYTE, 1, TimerProc);
+  SetTimer(hwnd_main_window, TIMER_REPAINT, 100, TimerProcRepaint);
   //pêtla obs³ugi komunikatów
 
   MSG msg = {};
@@ -218,15 +221,20 @@ int AudioProcessingCallback(const void* input, void* output, unsigned long frame
 
 void __stdcall TimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
+  SetWindowText(hwnd_static_byte, actual_byte);
+}
+
+void __stdcall TimerProcRepaint(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
+{
   hdc = GetDC(hwnd);
   if (audio_demodulator->GetClockOrStartState() != CLOCK_STATE_HIGH)
-   FillRect(hdc, &rect, CreateSolidBrush(RGB(255, 0, 0)));
+    FillRect(hdc, &rect, CreateSolidBrush(RGB(255, 0, 0)));
   else
     FillRect(hdc, &rect, CreateSolidBrush(RGB(0, 255, 0)));
   ReleaseDC(hwnd, hdc);
-  SetWindowText(hwnd_static_byte, actual_byte);
 
 }
+
 
 void InitRect()
 {
